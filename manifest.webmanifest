@@ -1,0 +1,26 @@
+{
+ "name": "บันทึกรายรับรายจ่าย",
+ "short_name": "บันทึกรายรับ",
+ "description": "แอปบันทึกรายรับรายจ่ายประจำวันที่ใช้งานง่ายบนมือถือ เพิ่มรายการได้เร็วและแบ่งหมวดหมู่ได้ เช่น อาหาร เดินทาง ช้อปปิ้ง และอื่น ๆ มีหน้าสรุปยอดรายเดือนที่แสดงรายรับ รายจ่าย ยอดคงเหลือ และกราฟสัดส่วนตามหมวดหมู่ ข้อมูลทั้งหมดเก็บไว้ในเครื่องและใช้งานแบบออฟไลน์ได้",
+ "lang": "th",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#14b8a6",
+ "theme_color": "#14b8a6",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any maskable"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any maskable"
+  }
+ ]
+}
