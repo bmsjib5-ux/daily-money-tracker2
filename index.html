@@ -122,15 +122,18 @@ main{position:relative;z-index:1;padding:16px 16px calc(var(--tabh) + var(--sab)
 .rcp:active{background:var(--brand-bg)}
 .rcp .si,.rcpfull .si{width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand-dd);display:flex;align-items:center;justify-content:center;flex:none}
 .rcp .t1,.rcpfull .t1{display:block;font-weight:700;font-size:16px}
-.rcp .sd{display:block;font-size:14px;color:var(--muted)}
+.rcp .sd,.rcpfull .sd{display:block;font-size:14px;color:var(--muted)}
 .rcp .chev{color:var(--muted);flex:none}
-.rcpfull{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px;margin-bottom:16px}
+.rcpfull{display:flex;gap:12px;align-items:flex-start;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px;margin-bottom:16px}
 .thumbbtn{flex:none;border-radius:12px;overflow:hidden}
 .thumbbtn img{width:68px;height:68px;object-fit:cover;background:#f1f5f9}
 .rcpacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .chip{min-height:40px;padding:0 12px;border-radius:20px;border:1.5px solid var(--line);font-weight:600;font-size:14px;background:#fff;color:var(--brand-dd)}
 .chip:active{background:var(--brand-soft)}
 .chip.danger{color:var(--exp)}
+.chip svg{display:inline;vertical-align:-3px;margin-right:4px}
+.chip.amt{color:var(--exp);border-color:#fdba74;background:var(--brand-bg);font-weight:700}
+.ocr{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
 .spin{width:22px;height:22px;border:3px solid #fff;border-top-color:var(--brand-d);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .rcpview{width:100%;max-height:65dvh;object-fit:contain;border-radius:12px;background:#f1f5f9}
@@ -228,6 +231,7 @@ main{position:relative;z-index:1;padding:16px 16px calc(var(--tabh) + var(--sab)
 
 
 
+
 <!-- genimage-pwa:start -->
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#14b8a6">
@@ -291,7 +295,7 @@ main{position:relative;z-index:1;padding:16px 16px calc(var(--tabh) + var(--sab)
         <div class="gimg"><img src="assets/receipt-scan.png" alt="ภาพประกอบการถ่ายรูปใบเสร็จหรือสลิปโอนเงิน" onerror="this.style.display='none'"><span class="gnum" aria-hidden="true">2</span></div>
         <div class="gtxt">
           <h3>แนบใบเสร็จ / สลิป<span class="gdone">✓ ทำแล้ว</span></h3>
-          <p>ถ่ายรูปใบเสร็จหรือเลือกสลิปธนาคาร แนบไว้กับรายการ</p>
+          <p>ถ่ายรูปใบเสร็จหรือเลือกสลิปธนาคาร แอปจะอ่านจำนวนเงินจากรูปให้อัตโนมัติ</p>
           <button class="chip" data-act="goscan">ลองถ่ายใบเสร็จ ›</button>
         </div>
       </div>
@@ -487,6 +491,7 @@ var P={
 var I_CAM='<path d="M4 8h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13.5" r="3.5"/>';
 var I_IMG='<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>';
 var I_CLIP='<path d="M21 11l-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>';
+var I_SCAN='<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 12h8"/>';
 var CATS={
  expense:[
   {id:'food',name:'อาหาร',color:'#c2410c'},
@@ -564,7 +569,7 @@ function rClear(){return idb('readwrite',function(s){return s.clear()})}
 /* state */
 var curMonth=todayStr().slice(0,7);
 var listFilter='all',sumType='expense',flashId=null,navCount=0,curScreen='home';
-var form={type:'expense',cat:'food',editing:null,rcp:null,rcpRemoved:false};
+var form={type:'expense',cat:'food',editing:null,rcp:null,rcpRemoved:false,ocr:null};
 var rcpBusy=false,rcpSource='gallery';
 
 /* toast */
@@ -598,7 +603,7 @@ function showWelcome(){
   openModal('<div class="welcome"><img src="assets/app-icon.png" alt="" onerror="this.style.display=\'none\'"><h2 id="modalTitle">ยินดีต้อนรับ 👋</h2><p class="lead">จดรายรับรายจ่ายง่าย ๆ ในไม่กี่วินาที</p>'+
   '<ul class="wlist">'+
   '<li><span class="si">'+ic('<path d="M12 5v14M5 12h14"/>',20)+'</span><span><b>เพิ่มรายการเร็ว</b><br><span class="muted small">กด “เพิ่ม” ใส่จำนวนเงิน เลือกหมวด แล้วบันทึก</span></span></li>'+
-  '<li><span class="si">'+ic(I_CAM,20)+'</span><span><b>ถ่ายรูปใบเสร็จ / สลิป</b><br><span class="muted small">แนบรูปใบเสร็จหรือสลิปโอนเงินไว้กับรายการ</span></span></li>'+
+  '<li><span class="si">'+ic(I_CAM,20)+'</span><span><b>ถ่ายรูปใบเสร็จ / สลิป</b><br><span class="muted small">แนบรูปไว้กับรายการ และอ่านจำนวนเงินจากรูปให้อัตโนมัติ</span></span></li>'+
   '<li><span class="si">'+ic('<path d="M21 12A9 9 0 1 1 12 3v9z"/>',20)+'</span><span><b>สรุปรายเดือน</b><br><span class="muted small">ดูรายรับ รายจ่าย ยอดคงเหลือ และกราฟตามหมวด</span></span></li>'+
   '<li><span class="si">'+ic('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',20)+'</span><span><b>ข้อมูลอยู่ในเครื่อง</b><br><span class="muted small">ใช้งานออฟไลน์ได้ ไม่ต้องสมัครสมาชิก</span></span></li>'+
   '</ul><div class="stack"><button class="btn primary block" data-m="start" data-autofocus>เริ่มใช้งาน</button>'+
@@ -723,14 +728,14 @@ function renderSettings(){
 /* add form */
 var amt=$('#amt'),note=$('#note'),date=$('#date');
 function dropRcpUrl(){if(form.rcp&&form.rcp.url){try{URL.revokeObjectURL(form.rcp.url)}catch(e){}}}
-function resetForm(){dropRcpUrl();form={type:'expense',cat:'food',editing:null,rcp:null,rcpRemoved:false};amt.value='';note.value='';date.value=todayStr();$('#amtErr').textContent=''}
+function resetForm(){dropRcpUrl();form={type:'expense',cat:'food',editing:null,rcp:null,rcpRemoved:false,ocr:null};amt.value='';note.value='';date.value=todayStr();$('#amtErr').textContent=''}
 function renderAdd(arg){
   if(arg){
     if(form.editing!==arg){
       var t=findTx(arg);
       if(!t){toast('ไม่พบรายการนี้');location.replace('#list');return}
       dropRcpUrl();
-      form={type:t.type,cat:cat(t.category,t.type).id,editing:t.id,rcp:null,rcpRemoved:false};
+      form={type:t.type,cat:cat(t.category,t.type).id,editing:t.id,rcp:null,rcpRemoved:false,ocr:null};
       amt.value=String(t.amount);note.value=t.note||'';date.value=t.date;$('#amtErr').textContent='';
       if(t.receipt){
         var id=t.id;
@@ -747,20 +752,27 @@ function paintForm(){
   $$('[data-act="type"]').forEach(function(x){x.setAttribute('aria-pressed',String(x.getAttribute('data-v')===form.type))});
   $('#amtBox').className='amountbox '+form.type;
   $('#cats').innerHTML=CATS[form.type].map(function(c){var on=c.id===form.cat;return '<button type="button" class="cat" role="radio" aria-checked="'+on+'" tabindex="'+(on?0:-1)+'" data-act="cat" data-v="'+c.id+'">'+cicon(c,20)+'<span>'+esc(c.name)+'</span></button>'}).join('');
-  $('#saveBtn').textContent=form.editing?'บันทึกการแก้ไข':'บันทึก';
+  $('#saveBtn').textContent=form.editing?'บันทึ���การแก้ไข':'บันทึก';
   $('#delBtn').hidden=!form.editing;
   paintReceipt();
 }
 function paintReceipt(){
   var box=$('#rcpBox');
   if(rcpBusy){
-    box.innerHTML='<div class="rcp" role="status"><span class="si"><span class="spin"></span></span><span><span class="t1">กำลังอ่านใบเสร็จ…</span><span class="sd">รอสักครู่</span></span></div>';
+    box.innerHTML='<div class="rcp" role="status"><span class="si"><span class="spin"></span></span><span><span class="t1">กำลังอ่านตัวเลขจากรูป (OCR)…</span><span class="sd">รอสักครู่ อ่านในเครื่องนี้เท่านั้น</span></span></div>';
   }else if(form.rcp){
+    var o=form.ocr,oh='';
+    if(o){
+      if(o.amounts.length)oh='<div class="ocr"><span class="sd">ตัวเลขที่อ่านได้ · แตะเพื่อใช้เป็นจำนวนเงิน</span><div class="rcpacts">'+
+        o.amounts.map(function(v){return '<button type="button" class="chip amt" data-act="ocramt" data-v="'+v+'" aria-label="ใช้จำนวนเงิน '+esc(money(v))+'">'+esc(money(v))+'</button>'}).join('')+'</div></div>';
+      else oh='<div class="ocr"><span class="sd">ไม่พบตัวเลขในรูป กรอกจำนวนเงินเองได้เลย</span></div>';
+    }
     box.innerHTML='<div class="rcpfull"><button type="button" class="thumbbtn" data-act="rcpview" aria-label="ดูรูปใบเสร็จ"><img src="'+esc(form.rcp.url)+'" alt=""></button>'+
     '<div style="flex:1;min-width:0"><span class="t1">แนบใบเสร็จแล้ว</span><div class="rcpacts">'+
-    '<button type="button" class="chip" data-act="rcpview">ดูรูป</button><button type="button" class="chip" data-act="rcpadd">เปลี่ยนรูป</button><button type="button" class="chip danger" data-act="rcpdel">ลบรูป</button></div></div></div>';
+    (o?'':'<button type="button" class="chip" data-act="rcpocr">'+ic(I_SCAN,16)+'อ่านตัวเลข</button>')+
+    '<button type="button" class="chip" data-act="rcpview">ดูรูป</button><button type="button" class="chip" data-act="rcpadd">เปลี่ยนรูป</button><button type="button" class="chip danger" data-act="rcpdel">ลบรูป</button></div>'+oh+'</div></div>';
   }else{
-    box.innerHTML='<button type="button" class="rcp" data-act="rcpadd"><span class="si">'+ic(I_CAM,22)+'</span><span style="flex:1;min-width:0"><span class="t1">ถ่ายรูป / นำเข้าใบเสร็จ</span><span class="sd">ถ่ายใบเสร็จ หรือเลือกสลิปโอนเงินจากธนาคาร</span></span><span class="chev">'+ic('<path d="M9 18l6-6-6-6"/>',20)+'</span></button>';
+    box.innerHTML='<button type="button" class="rcp" data-act="rcpadd"><span class="si">'+ic(I_CAM,22)+'</span><span style="flex:1;min-width:0"><span class="t1">ถ่ายรูป / นำเข้าใบเสร็จ</span><span class="sd">ถ่ายใบเสร็จหรือเลือกสลิป แอปจะอ่านจำนวนเงินให้อัตโนมัติ</span></span><span class="chev">'+ic('<path d="M9 18l6-6-6-6"/>',20)+'</span></button>';
   }
 }
 $('#cats').addEventListener('keydown',function(e){
@@ -806,15 +818,15 @@ $('#addForm').addEventListener('submit',function(e){
 });
 
 /* receipt capture / import */
-var canOCR='TextDetector' in window;
+var hasTD='TextDetector' in window;
 function showScanSheet(){
   openModal('<div class="welcome"><img class="scanimg" src="assets/receipt-scan.png" alt="ภาพประกอบการถ่ายรูปใบเสร็จหรือสลิปโอนเงิน" onerror="this.style.display=\'none\'">'+
   '<h2 id="modalTitle">ถ่ายรูปหรือนำเข้าใบเสร็จ</h2>'+
-  '<p class="lead">ถ่ายรูปใบเสร็จ หรือเลือกสลิปโอนเงินจากแอปธนาคารในคลังภาพ แอปจะแนบรูปไว้กับรายการ'+(canOCR?' และช่วยกรอกจำนวนเงินกับวันที่ให้อัตโนมัติ':'')+'</p>'+
+  '<p class="lead">ถ่ายรูปใบเสร็จ หรือเลือกสลิปโอนเงินจากแอปธนาคารในคลังภาพ แอปจะแนบรูปไว้กับรายการ และอ่านตัวเลขจากรูป (OCR) เพื่อช่วยกรอกจำนวนเงินกับวันที่ให้อัตโนมัติ</p>'+
   '<div class="stack"><button class="btn primary block" data-m="camera" data-autofocus>'+ic(I_CAM,20)+'ถ่ายรูปใบเสร็จ</button>'+
   '<button class="btn ghost block" data-m="gallery">'+ic(I_IMG,20)+'เลือกรูป / สลิปธนาคาร</button>'+
   '<button class="btn block" data-m="0" style="color:var(--muted)">ยกเลิก</button></div>'+
-  (canOCR?'':'<p class="small" style="margin:12px 0 0;text-align:center">อุปกรณ์นี้ยังอ่านตัวเลขจากรูปไม่ได้ กรุณาตรวจสอบและกรอกจำนวนเงินเอง</p>')+
+  '<p class="small" style="margin:12px 0 0;text-align:center">อ่านรูปในเครื่องนี้เท่านั้น ไม่ส่งรูปออกนอกเครื่อง · ถ่ายให้ตัวเลขชัด ตรง และสว่างพอ แล้วตรวจสอบก่อนบันทึก</p>'+
   '</div>',function(v){
     if(v==='camera'){rcpSource='camera';$('#camIn').click()}
     else if(v==='gallery'){rcpSource='gallery';$('#galIn').click()}
@@ -842,43 +854,254 @@ function canvasBlob(c){
     else{try{var d=atob(c.toDataURL('image/jpeg',0.75).split(',')[1]),a=new Uint8Array(d.length);for(var i=0;i<d.length;i++)a[i]=d.charCodeAt(i);res(new Blob([a],{type:'image/jpeg'}))}catch(e){rej(e)}}
   });
 }
+function toCanvas(src){
+  var w=src.naturalWidth||src.width,h=src.naturalHeight||src.height;
+  if(!w||!h)throw new Error('size');
+  var s=Math.min(1,1600/Math.max(w,h)),c=document.createElement('canvas');
+  c.width=Math.round(w*s);c.height=Math.round(h*s);
+  var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(src,0,0,c.width,c.height);
+  if(src.close)try{src.close()}catch(e){}
+  return c;
+}
+
+/* ---- on-device OCR (no network) ---- */
+var GN=16,TPL=null;
+var TPL_D='0123456789/',TPL_L='acdehkmnprtuvwxyACEFHKLMNPRTUVWXY',TPL_T='กขคฆงจฉชซญฎฏฐฑฒณดตถทธนบปผพฟภมยรลวศษสหฬอฮาเโใไ';
+function featOf(get,x0,y0,w,h){
+  var S=Math.max(w,h),ox=x0+(w-S)/2,oy=y0+(h-S)/2,st=S/GN,f=new Float32Array(GN*GN),gx,gy,a,b,k;
+  for(gy=0;gy<GN;gy++)for(gx=0;gx<GN;gx++){
+    var v=0;
+    for(a=0;a<3;a++)for(b=0;b<3;b++)v+=get(Math.floor(ox+(gx+(b+.5)/3)*st),Math.floor(oy+(gy+(a+.5)/3)*st));
+    f[gy*GN+gx]=v/9;
+  }
+  var g=new Float32Array(GN*GN),m=0,n=0;
+  for(gy=0;gy<GN;gy++)for(gx=0;gx<GN;gx++){
+    var s=0;
+    for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++){
+      var yy=gy+dy,xx=gx+dx;if(yy<0||xx<0||yy>=GN||xx>=GN)continue;
+      s+=f[yy*GN+xx]*(dx?1:2)*(dy?1:2);
+    }
+    g[gy*GN+gx]=s/16;m+=s/16;
+  }
+  m/=GN*GN;
+  for(k=0;k<GN*GN;k++){g[k]-=m;n+=g[k]*g[k]}
+  if(n<1e-6)return null;n=Math.sqrt(n);
+  for(k=0;k<GN*GN;k++)g[k]/=n;
+  return g;
+}
+function buildTpl(){
+  var S=112,cv=document.createElement('canvas');cv.width=cv.height=S;
+  var x=cv.getContext('2d',{willReadFrequently:true}),out=[];
+  var FS=['Tahoma,"Leelawadee UI","Noto Sans Thai","Sukhumvit Set",sans-serif','sans-serif','serif','monospace'];
+  function add(ch,font){
+    x.clearRect(0,0,S,S);x.fillStyle='#000';x.font=font;x.textBaseline='alphabetic';x.fillText(ch,24,80);
+    var d=x.getImageData(0,0,S,S).data,x0=S,y0=S,x1=-1,y1=-1,xx,yy;
+    for(yy=0;yy<S;yy++)for(xx=0;xx<S;xx++)if(d[(yy*S+xx)*4+3]>110){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
+    if(x1<0)return;
+    var f=featOf(function(px,py){return px>=0&&py>=0&&px<S&&py<S&&d[(py*S+px)*4+3]>110?1:0},x0,y0,x1-x0+1,y1-y0+1);
+    if(f)out.push({c:ch,f:f,ar:(x1-x0+1)/(y1-y0+1)});
+  }
+  [400,700].forEach(function(wt){
+    FS.forEach(function(fam,fi){
+      var font=wt+' 64px '+fam,i;
+      for(i=0;i<TPL_D.length;i++)add(TPL_D.charAt(i),font);
+      if(fi<2)for(i=0;i<TPL_L.length;i++)add(TPL_L.charAt(i),font);
+      if(fi===0)for(i=0;i<TPL_T.length;i++)add(TPL_T.charAt(i),font);
+    });
+  });
+  return out;
+}
+function classify(ft,ar){
+  var best=9,bc='?',la=Math.log(ar);
+  for(var t=0;t<TPL.length;t++){
+    var T=TPL[t],tf=T.f,s=0;
+    for(var k=0;k<256;k++)s+=ft[k]*tf[k];
+    var dd=1-s+0.35*Math.abs(la-Math.log(T.ar));
+    if(dd<best){best=dd;bc=T.c}
+  }
+  return {c:bc,d:best};
+}
+function median(a){var b=a.slice().sort(function(x,y){return x-y});return b[b.length>>1]}
+function localOCR(c){
+  if(!TPL)TPL=buildTpl();
+  if(!TPL.length)return null;
+  var W=c.width,H=c.height,N=W*H,d=c.getContext('2d').getImageData(0,0,W,H).data;
+  var g=new Uint8Array(N),tot=0,i,x,y;
+  for(i=0;i<N;i++){var v=(d[i*4]*77+d[i*4+1]*150+d[i*4+2]*29)>>8;g[i]=v;tot+=v}
+  if(tot/N<110)for(i=0;i<N;i++)g[i]=255-g[i]; // light text on dark background
+  // adaptive threshold (integral image)
+  var W1=W+1,ii=new Uint32Array(W1*(H+1));
+  for(y=0;y<H;y++){var row=0;for(x=0;x<W;x++){row+=g[y*W+x];ii[(y+1)*W1+x+1]=ii[y*W1+x+1]+row}}
+  var r=Math.max(10,Math.min(40,Math.round(Math.max(W,H)/50))),bin=new Uint8Array(N);
+  for(y=0;y<H;y++){
+    var ya=Math.max(0,y-r),yb=Math.min(H,y+r+1);
+    for(x=0;x<W;x++){
+      var xa=Math.max(0,x-r),xb=Math.min(W,x+r+1),cnt=(yb-ya)*(xb-xa);
+      var s=ii[yb*W1+xb]-ii[ya*W1+xb]-ii[yb*W1+xa]+ii[ya*W1+xa],pc=g[y*W+x]*cnt;
+      if(pc<s*0.85&&s-pc>14*cnt)bin[y*W+x]=1;
+    }
+  }
+  g=null;ii=null;
+  // connected components (8-connected)
+  var lab=new Int32Array(N),stack=new Int32Array(N),comps=[];
+  for(i=0;i<N;i++){
+    if(!bin[i]||lab[i])continue;
+    var id=comps.length+1,sp=0,mnx=W,mny=H,mxx=-1,mxy=-1,n=0;
+    stack[sp++]=i;lab[i]=id;
+    while(sp){
+      var p=stack[--sp],px=p%W,py=(p-px)/W;n++;
+      if(px<mnx)mnx=px;if(px>mxx)mxx=px;if(py<mny)mny=py;if(py>mxy)mxy=py;
+      for(var dy=-1;dy<=1;dy++){var ny=py+dy;if(ny<0||ny>=H)continue;
+        for(var dx=-1;dx<=1;dx++){var nx=px+dx;if(nx<0||nx>=W)continue;var q=ny*W+nx;if(bin[q]&&!lab[q]){lab[q]=id;stack[sp++]=q}}}
+    }
+    comps.push({id:id,x:mnx,y:mny,w:mxx-mnx+1,h:mxy-mny+1,n:n});
+  }
+  stack=null;bin=null;
+  var minH=8,maxH=Math.min(160,H/4),tall=[],small=[];
+  comps.forEach(function(o){
+    var fr=o.n/(o.w*o.h);
+    if(o.h>=minH&&o.h<=maxH&&o.w<=o.h*4&&fr>0.06&&(fr<0.9||o.w<o.h*0.45))tall.push(o);
+    else if(o.h<maxH/2&&o.w<maxH&&o.n>=3)small.push(o);
+  });
+  if(tall.length>6000)tall=tall.slice(0,6000);
+  tall.sort(function(a,b){return a.x-b.x});
+  // group into text lines
+  var lines=[];
+  tall.forEach(function(o){
+    var cy=o.y+o.h/2,best=null,bd=1e9;
+    for(var k=0;k<lines.length;k++){
+      var L=lines[k],dy=Math.abs(cy-L.cy),ratio=o.h/L.h;
+      if(dy<0.3*Math.max(o.h,L.h)&&ratio>0.55&&ratio<1.8&&o.x-L.x2<2.5*L.h&&dy<bd){bd=dy;best=L}
+    }
+    if(best){var m=best.it.length;best.cy=(best.cy*m+cy)/(m+1);best.h=(best.h*m+o.h)/(m+1);best.x2=Math.max(best.x2,o.x+o.w);best.it.push(o)}
+    else lines.push({cy:cy,h:o.h,x1:o.x,x2:o.x+o.w,it:[o]});
+  });
+  lines=lines.filter(function(L){return L.it.length>=2});
+  lines.forEach(function(L){
+    L.lh=median(L.it.map(function(o){return o.h}));
+    L.top=median(L.it.map(function(o){return o.y}));
+    L.bot=median(L.it.map(function(o){return o.y+o.h}));
+    L.parts=[];L.mid=[];
+  });
+  // punctuation (. , - :)
+  small.forEach(function(o){
+    var cx=o.x+o.w/2;
+    for(var k=0;k<lines.length;k++){
+      var L=lines[k],lh=L.lh;
+      if(cx<L.x1-lh||cx>L.x2+lh||o.y<L.top-0.1*lh||o.y+o.h>L.bot+0.25*lh||o.h>0.5*lh||o.w>0.9*lh)continue;
+      var sz=Math.max(o.w,o.h),my=o.y+o.h/2;
+      if(o.h<=0.28*lh&&o.w>=1.4*o.h&&o.w<=0.8*lh){if(my>L.top+0.3*lh&&my<L.top+0.75*lh)L.parts.push({x:o.x,x2:o.x+o.w,s:'-'});}
+      else if(sz<=0.38*lh&&sz>=0.06*lh&&o.w<=0.5*lh){
+        if(o.y+o.h>=L.bot-0.15*lh&&o.y>=L.top+0.5*lh)L.parts.push({x:o.x,x2:o.x+o.w,s:o.h>1.35*o.w?',':'.',o:o});
+        else if(o.y+o.h<=L.top+0.72*lh&&o.y>=L.top+0.15*lh)L.mid.push(o);
+      }
+      break;
+    }
+  });
+  function getFor(id,x0,y0,x1,y1){return function(px,py){return px>=x0&&px<=x1&&py>=y0&&py<=y1&&lab[py*W+px]===id?1:0}}
+  function classifyRegion(id,a,b,t,bt){
+    var y0=1e9,y1=-1,x0=1e9,x1=-1,xx,yy;
+    for(yy=t;yy<bt;yy++)for(xx=a;xx<b;xx++)if(lab[yy*W+xx]===id){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
+    if(x1<0)return null;
+    var f=featOf(getFor(id,x0,y0,x1,y1),x0,y0,x1-x0+1,y1-y0+1);
+    return f?classify(f,(x1-x0+1)/(y1-y0+1)):null;
+  }
+  function trySplit(o){
+    var w=o.w,h=o.h,col=new Int32Array(w),best=null,xx,yy,j;
+    for(yy=0;yy<h;yy++)for(xx=0;xx<w;xx++)if(lab[(o.y+yy)*W+o.x+xx]===o.id)col[xx]++;
+    for(var k=2;k<=6;k++){
+      var pw=w/k;if(pw<0.3*h)break;if(pw>0.9*h)continue;
+      var cuts=[0];
+      for(j=1;j<k;j++){
+        var c0=Math.round(j*pw),bc=c0,bv=1e9,rad=Math.max(1,Math.round(pw*0.25));
+        for(var cc=c0-rad;cc<=c0+rad;cc++){if(cc<=cuts[j-1]||cc>=w)continue;if(col[cc]<bv){bv=col[cc];bc=cc}}
+        cuts.push(bc);
+      }
+      cuts.push(w);
+      var str='',sd=0,ok=true;
+      for(j=0;j<k;j++){
+        var rr=classifyRegion(o.id,o.x+cuts[j],o.x+cuts[j+1],o.y,o.y+o.h);
+        if(!rr||!/[0-9]/.test(rr.c)||rr.d>0.4){ok=false;break}
+        str+=rr.c;sd+=rr.d;
+      }
+      if(ok&&(!best||sd/k<best.d))best={s:str,d:sd/k};
+    }
+    return best;
+  }
+  var out=[];
+  lines.forEach(function(L){
+    L.it.forEach(function(o){
+      var f=featOf(getFor(o.id,o.x,o.y,o.x+o.w-1,o.y+o.h-1),o.x,o.y,o.w,o.h);
+      var cl=f?classify(f,o.w/o.h):{c:'?',d:9},s=cl.d>0.55?'?':cl.c;
+      if(o.w>=0.75*o.h&&(cl.d>0.3||!/[0-9]/.test(s))){var sp2=trySplit(o);if(sp2&&sp2.d<cl.d)s=sp2.s}
+      L.parts.push({x:o.x,x2:o.x+o.w,s:s});
+    });
+    // colon = dot at baseline with another dot above it
+    L.parts.forEach(function(p){
+      if(p.s!=='.'||!p.o)return;
+      for(var k=0;k<L.mid.length;k++){var m=L.mid[k];if(m.x<p.x2&&p.x<m.x+m.w){p.s=':';L.mid.splice(k,1);break}}
+    });
+    L.parts.sort(function(a,b){return a.x-b.x});
+    var txt='',prev=null;
+    L.parts.forEach(function(p){
+      if(prev&&p.x-prev>0.45*L.lh)txt+=' ';
+      txt+=p.s;prev=prev===null?p.x2:Math.max(prev,p.x2);
+    });
+    out.push({y:L.top,t:txt});
+  });
+  out.sort(function(a,b){return a.y-b.y});
+  var res=out.map(function(o){return o.t}).join('\n');
+  return /\d/.test(res)?res:null;
+}
 function ocr(c){
-  if(!canOCR)return Promise.resolve(null);
-  try{
-    return new window.TextDetector().detect(c).then(function(rs){return rs.map(function(r){return r.rawValue||''}).join('\n')}).catch(function(){return null});
-  }catch(e){return Promise.resolve(null)}
+  var p=Promise.resolve(null);
+  if(hasTD){
+    try{p=new window.TextDetector().detect(c).then(function(rs){return rs.map(function(r){return r.rawValue||''}).join('\n')}).catch(function(){return null})}catch(e){}
+  }
+  return p.then(function(t){
+    if(t&&/\d/.test(t))return t;
+    return new Promise(function(res){setTimeout(function(){var o=null;try{o=localOCR(c)}catch(e){}res(o)},40)});
+  });
 }
 function handleImage(f,source){
   if(rcpBusy)return;
   if(f.type&&!/^image\//.test(f.type)){toast('กรุณาเลือกไฟล์รูปภาพ');return}
   rcpBusy=true;paintReceipt();
   loadImg(f).then(function(src){
-    var w=src.naturalWidth||src.width,h=src.naturalHeight||src.height;
-    if(!w||!h)throw new Error('size');
-    var s=Math.min(1,1600/Math.max(w,h)),c=document.createElement('canvas');
-    c.width=Math.round(w*s);c.height=Math.round(h*s);
-    var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(src,0,0,c.width,c.height);
-    if(src.close)try{src.close()}catch(e){}
+    var c=toCanvas(src);
     return Promise.all([canvasBlob(c),ocr(c)]);
   }).then(function(r){
     dropRcpUrl();
-    form.rcp={blob:r[0],url:URL.createObjectURL(r[0]),isNew:true};
-    rcpBusy=false;paintReceipt();
+    form.rcp={blob:r[0],url:URL.createObjectURL(r[0]),isNew:true};form.ocr=null;
+    rcpBusy=false;
     applyReceipt(r[1],f,source);
   }).catch(function(){
     rcpBusy=false;paintReceipt();toast('เปิดรูปนี้ไม่ได้ ลองเลือกรูปอื่น');
   });
 }
+function ocrExisting(){
+  var r=form.rcp;if(!r||rcpBusy)return;
+  rcpBusy=true;paintReceipt();
+  loadImg(r.blob).then(function(src){return ocr(toCanvas(src))}).then(function(t){
+    rcpBusy=false;
+    if(form.rcp!==r){paintReceipt();return}
+    applyReceipt(t,null,'existing');
+  }).catch(function(){rcpBusy=false;paintReceipt();toast('อ่านรูปนี้ไม่ได้')});
+}
 function applyReceipt(text,f,source){
-  var info=text?parseReceipt(text):{amount:0,date:null,slip:false},got=[];
+  var info=text?parseReceipt(text):{amount:0,date:null,slip:false,cands:[]},got=[];
+  form.ocr={amounts:info.cands||[]};
   if(info.amount>0&&!(parseFloat(amt.value)>0)){amt.value=String(info.amount);$('#amtErr').textContent='';got.push('จำนวนเงิน')}
-  if(info.date){date.value=info.date;got.push('วันที่')}
-  else if(!form.editing&&source==='gallery'&&f.lastModified&&date.value===todayStr()){
+  if(info.date){if(date.value!==info.date){date.value=info.date;got.push('วันที่')}}
+  else if(f&&!form.editing&&source==='gallery'&&f.lastModified&&date.value===todayStr()){
     var d=new Date(f.lastModified),ds=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
     if(ds<=todayStr()&&Date.now()-f.lastModified<366*864e5&&ds!==date.value){date.value=ds;got.push('วันที่')}
   }
   if(info.slip&&!note.value.trim())note.value='โอนเงิน (สลิปธนาคาร)';
+  paintReceipt();
   if(got.length)toast('อ่าน'+got.join('และ')+'จากรูปแล้ว โปรดตรวจสอบก่อนบันทึก');
+  else if(form.ocr.amounts.length)toast('อ่านตัวเลขได้ '+form.ocr.amounts.length+' ค่า แตะตัวเลขเพื่อเลือกใช้');
+  else if(source==='existing')toast('ไม่พบตัวเลขในรูป');
   else toast('แนบรูปใบเสร็จแล้ว'+(parseFloat(amt.value)>0?'':' กรอกจำนวนเงินได้เลย'));
   if(!(parseFloat(amt.value)>0))setTimeout(function(){amt.focus()},300);
 }
@@ -902,7 +1125,14 @@ function parseReceipt(raw){
   var KW=/(จำนวน|จํานวน|ยอดเงิน|ยอดรวม|ยอดชำระ|ยอดชําระ|ยอดสุทธิ|รวมทั้งสิ้น|รวมเงิน|สุทธิ|total|amount)/i;
   var kc=[];
   lines.forEach(function(l,i){if(!KW.test(l))return;var n=nums(l);if(!n.length&&lines[i+1])n=nums(lines[i+1]);kc=kc.concat(n)});
-  var amount=pick(kc)||pick(nums(t).filter(function(x){return x.dec}));
+  var allDec=nums(t).filter(function(x){return x.dec});
+  var amount=pick(kc)||pick(allDec);
+  // candidate amounts for the user to pick from
+  function desc(a){return a.slice().sort(function(x,y){return y.v-x.v})}
+  var kcd=kc.filter(function(x){return x.dec});
+  var pool=desc(kcd.length?kcd:kc).concat(desc(allDec)),seen={},cands=[];
+  if(amount>0){cands.push(Math.round(amount*100)/100);seen[cands[0]]=1}
+  pool.forEach(function(x){var v=Math.round(x.v*100)/100;if(v>0&&!seen[v]&&cands.length<6){seen[v]=1;cands.push(v)}});
   var date=null,m=/(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{2,4})(?!\d)/.exec(t);
   if(m)date=mkDate(+m[3],+m[2],+m[1]);
   for(var i=0;i<12&&!date;i++)for(var j=0;j<MONTHS[i].length&&!date;j++){
@@ -910,7 +1140,7 @@ function parseReceipt(raw){
     var r=new RegExp('(\\d{1,2})\\s*'+p+'\\s*(\\d{2,4})','i').exec(t);
     if(r)date=mkDate(+r[2],i+1,+r[1]);
   }
-  return {amount:Math.round((amount||0)*100)/100,date:date,slip:/โอนเงิน|โอนสำเร็จ|transfer|พร้อมเพย์|promptpay|prompt\s*pay|เลขที่รายการ/i.test(t)};
+  return {amount:Math.round((amount||0)*100)/100,date:date,cands:cands,slip:/โอนเงิน|โอนสำเร็จ|transfer|พร้อมเพย์|promptpay|prompt\s*pay|เลขที่รายการ/i.test(t)};
 }
 
 /* data */
@@ -976,11 +1206,16 @@ document.addEventListener('click',function(e){
       else{var cur=parseFloat(amt.value)||0;amt.value=String(Math.round((cur+ +v)*100)/100)}
       $('#amtErr').textContent='';break;
     case 'rcpadd':if(!rcpBusy)showScanSheet();break;
+    case 'rcpocr':ocrExisting();break;
+    case 'ocramt':
+      var ov=Math.round(parseFloat(v)*100)/100;
+      if(ov>0){amt.value=String(ov);$('#amtErr').textContent='';toast('ใช้จำนวนเงิน '+money(ov)+' แล้ว')}
+      break;
     case 'rcpview':
       if(form.rcp)openModal('<h2 id="modalTitle">รูปใบเสร็จ</h2><img class="rcpview" src="'+esc(form.rcp.url)+'" alt="รูปใบเสร็จที่แนบไว้"><div class="stack" style="margin-top:14px"><button class="btn ghost block" data-m="0" data-autofocus>ปิด</button></div>');
       break;
     case 'rcpdel':
-      dropRcpUrl();form.rcp=null;form.rcpRemoved=true;paintReceipt();
+      dropRcpUrl();form.rcp=null;form.ocr=null;form.rcpRemoved=true;paintReceipt();
       toast(form.editing?'นำรูปออกแล้ว กดบันทึกเพื่อยืนยัน':'นำรูปใบเสร็จออกแล้ว');break;
     case 'delete':
       var id=form.editing;if(!id)break;
@@ -1012,6 +1247,7 @@ route();
 if(!lsGet(SEEN))setTimeout(showWelcome,300);
 })();
 </script>
+
 
 
 
