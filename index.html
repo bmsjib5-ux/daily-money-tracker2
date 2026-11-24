@@ -134,6 +134,8 @@ main{position:relative;z-index:1;padding:16px 16px calc(var(--tabh) + var(--sab)
 .chip svg{display:inline;vertical-align:-3px;margin-right:4px}
 .chip.amt{color:var(--exp);border-color:#fdba74;background:var(--brand-bg);font-weight:700}
 .ocr{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.bankline{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--ink)}
+.bankline i{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
 .spin{width:22px;height:22px;border:3px solid #fff;border-top-color:var(--brand-d);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .rcpview{width:100%;max-height:65dvh;object-fit:contain;border-radius:12px;background:#f1f5f9}
@@ -227,6 +229,7 @@ main{position:relative;z-index:1;padding:16px 16px calc(var(--tabh) + var(--sab)
 @media (min-width:481px){body{padding:0}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
+
 
 
 
@@ -752,10 +755,11 @@ function paintForm(){
   $$('[data-act="type"]').forEach(function(x){x.setAttribute('aria-pressed',String(x.getAttribute('data-v')===form.type))});
   $('#amtBox').className='amountbox '+form.type;
   $('#cats').innerHTML=CATS[form.type].map(function(c){var on=c.id===form.cat;return '<button type="button" class="cat" role="radio" aria-checked="'+on+'" tabindex="'+(on?0:-1)+'" data-act="cat" data-v="'+c.id+'">'+cicon(c,20)+'<span>'+esc(c.name)+'</span></button>'}).join('');
-  $('#saveBtn').textContent=form.editing?'บันทึ���การแก้ไข':'บันทึก';
+  $('#saveBtn').textContent=form.editing?'บันทึกการแก้ไข':'บันทึก';
   $('#delBtn').hidden=!form.editing;
   paintReceipt();
 }
+var KIND_LABEL={slip:'สลิปโอนเงิน',pay:'สลิปชำระเงิน',receipt:'ใบเสร็จ'};
 function paintReceipt(){
   var box=$('#rcpBox');
   if(rcpBusy){
@@ -763,9 +767,10 @@ function paintReceipt(){
   }else if(form.rcp){
     var o=form.ocr,oh='';
     if(o){
-      if(o.amounts.length)oh='<div class="ocr"><span class="sd">ตัวเลขที่อ่านได้ · แตะเพื่อใช้เป็นจำนวนเงิน</span><div class="rcpacts">'+
+      if(o.kind&&o.kind!=='receipt')oh+='<div class="ocr"><div class="bankline"><i style="background:'+(o.bank?o.bank.color:'var(--brand-d)')+'" aria-hidden="true"></i><span>'+esc(KIND_LABEL[o.kind]+(o.bank?' · '+o.bank.full:''))+'</span></div></div>';
+      if(o.amounts.length)oh+='<div class="ocr"><span class="sd">ตัวเลขที่อ่านได้ · แตะเพื่อใช้เป็นจำนวนเงิน</span><div class="rcpacts">'+
         o.amounts.map(function(v){return '<button type="button" class="chip amt" data-act="ocramt" data-v="'+v+'" aria-label="ใช้จำนวนเงิน '+esc(money(v))+'">'+esc(money(v))+'</button>'}).join('')+'</div></div>';
-      else oh='<div class="ocr"><span class="sd">ไม่พบตัวเลขในรูป กรอกจำนวนเงินเองได้เลย</span></div>';
+      else oh+='<div class="ocr"><span class="sd">ไม่พบตัวเลขในรูป กรอกจำนวนเงินเองได้เลย</span></div>';
     }
     box.innerHTML='<div class="rcpfull"><button type="button" class="thumbbtn" data-act="rcpview" aria-label="ดูรูปใบเสร็จ"><img src="'+esc(form.rcp.url)+'" alt=""></button>'+
     '<div style="flex:1;min-width:0"><span class="t1">แนบใบเสร็จแล้ว</span><div class="rcpacts">'+
@@ -823,6 +828,7 @@ function showScanSheet(){
   openModal('<div class="welcome"><img class="scanimg" src="assets/receipt-scan.png" alt="ภาพประกอบการถ่ายรูปใบเสร็จหรือสลิปโอนเงิน" onerror="this.style.display=\'none\'">'+
   '<h2 id="modalTitle">ถ่ายรูปหรือนำเข้าใบเสร็จ</h2>'+
   '<p class="lead">ถ่ายรูปใบเสร็จ หรือเลือกสลิปโอนเงินจากแอปธนาคารในคลังภาพ แอปจะแนบรูปไว้กับรายการ และอ่านตัวเลขจากรูป (OCR) เพื่อช่วยกรอกจำนวนเงินกับวันที่ให้อัตโนมัติ</p>'+
+  '<p class="small" style="margin:-6px 0 14px;text-align:center">รองรับสลิปกสิกรไทย (K PLUS), ไทยพาณิชย์ (SCB), กรุงไทย (เป๋าตัง/NEXT), กรุงเทพ, กรุงศรี, ttb, ออมสิน, ธ.ก.ส., ธอส., UOB, CIMB, KKP, TrueMoney และพร้อมเพย์</p>'+
   '<div class="stack"><button class="btn primary block" data-m="camera" data-autofocus>'+ic(I_CAM,20)+'ถ่ายรูปใบเสร็จ</button>'+
   '<button class="btn ghost block" data-m="gallery">'+ic(I_IMG,20)+'เลือกรูป / สลิปธนาคาร</button>'+
   '<button class="btn block" data-m="0" style="color:var(--muted)">ยกเลิก</button></div>'+
@@ -1089,58 +1095,124 @@ function ocrExisting(){
   }).catch(function(){rcpBusy=false;paintReceipt();toast('อ่านรูปนี้ไม่ได้')});
 }
 function applyReceipt(text,f,source){
-  var info=text?parseReceipt(text):{amount:0,date:null,slip:false,cands:[]},got=[];
-  form.ocr={amounts:info.cands||[]};
+  var info=text?parseReceipt(text):{amount:0,date:null,slip:false,cands:[],kind:null,bank:null,note:''},got=[];
+  form.ocr={amounts:info.cands||[],kind:info.kind,bank:info.bank};
   if(info.amount>0&&!(parseFloat(amt.value)>0)){amt.value=String(info.amount);$('#amtErr').textContent='';got.push('จำนวนเงิน')}
   if(info.date){if(date.value!==info.date){date.value=info.date;got.push('วันที่')}}
   else if(f&&!form.editing&&source==='gallery'&&f.lastModified&&date.value===todayStr()){
     var d=new Date(f.lastModified),ds=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
     if(ds<=todayStr()&&Date.now()-f.lastModified<366*864e5&&ds!==date.value){date.value=ds;got.push('วันที่')}
   }
-  if(info.slip&&!note.value.trim())note.value='โอนเงิน (สลิปธนาคาร)';
+  if(info.slip&&!note.value.trim())note.value=info.note||'โอนเงิน (สลิปธนาคาร)';
   paintReceipt();
-  if(got.length)toast('อ่าน'+got.join('และ')+'จากรูปแล้ว โปรดตรวจสอบก่อนบันทึก');
-  else if(form.ocr.amounts.length)toast('อ่านตัวเลขได้ '+form.ocr.amounts.length+' ค่า แตะตัวเลขเพื่อเลือกใช้');
+  var pre=info.slip&&info.bank?'สลิป'+info.bank.name+' · ':'';
+  if(got.length)toast(pre+'อ่าน'+got.join('และ')+'จากรูปแล้ว โปรดตรวจสอบก่อนบันทึก');
+  else if(form.ocr.amounts.length)toast(pre+'อ่านตัวเลขได้ '+form.ocr.amounts.length+' ค่า แตะตัวเลขเพื่อเลือกใช้');
   else if(source==='existing')toast('ไม่พบตัวเลขในรูป');
   else toast('แนบรูปใบเสร็จแล้ว'+(parseFloat(amt.value)>0?'':' กรอกจำนวนเงินได้เลย'));
   if(!(parseFloat(amt.value)>0))setTimeout(function(){amt.focus()},300);
 }
 var MONTHS=[['ม.ค.','มกราคม','jan'],['ก.พ.','กุมภาพันธ์','feb'],['มี.ค.','มีนาคม','mar'],['เม.ย.','เมษายน','apr'],['พ.ค.','พฤษภาคม','may'],['มิ.ย.','มิถุนายน','jun'],['ก.ค.','กรกฎาคม','jul'],['ส.ค.','สิงหาคม','aug'],['ก.ย.','กันยายน','sep'],['ต.ค.','ตุลาคม','oct'],['พ.ย.','พฤศจิกายน','nov'],['ธ.ค.','ธันวาคม','dec']];
+function monPat(a){return /^[a-z]/.test(a)?a+'[a-z]*\\.?':a.replace(/\./g,'\\.?\\s*')}
+var RX_TDATE=new RegExp('\\d{1,2}\\s*(?:'+MONTHS.map(function(r){return r.map(monPat).join('|')}).join('|')+')\\s*\\d{2,4}','gi');
 function mkDate(y,m,d){
   if(y<100)y=y>=50?y+2500-543:y+2000;else if(y>2400)y-=543;
   if(y<2000||m<1||m>12||d<1||d>31)return null;
   var dt=new Date(y,m-1,d);if(dt.getMonth()!==m-1)return null;
   var s=y+'-'+pad(m)+'-'+pad(d);return s>todayStr()?null:s;
 }
+/* Thai bank / e-wallet slip profiles (detected from text printed on the slip) */
+var BANKS=[
+ {id:'kbank',name:'กสิกรไทย',full:'ธนาคารกสิกรไทย (K PLUS)',color:'#138f2d',re:/กสิกร|kasikorn|k\s*-?\s*bank|k\s*\+|k\s*plus|make\s*by\s*k/i},
+ {id:'scb',name:'ไทยพาณิชย์',full:'ธนาคารไทยพาณิชย์ (SCB)',color:'#4e2a84',re:/ไทยพาณิชย์|\bscb\b|siam\s*commercial/i},
+ {id:'ktb',name:'กรุงไทย',full:'ธนาคารกรุงไทย',color:'#00a1e0',re:/กรุงไทย|krung\s*thai|\bktb\b|เป๋าตัง|pao\s*tang/i},
+ {id:'bbl',name:'กรุงเทพ',full:'ธนาคารกรุงเทพ',color:'#1e4598',re:/ธนาคารกรุงเทพ|ธ\.\s*กรุงเทพ|bangkok\s*bank|bualuang|\bbbl\b/i},
+ {id:'bay',name:'กรุงศรี',full:'ธนาคารกรุงศรีอยุธยา',color:'#e0a800',re:/กรุงศรี|krungsri|ayudhya|\bkma\b/i},
+ {id:'ttb',name:'ทีทีบี',full:'ธนาคารทหารไทยธนชาต (ttb)',color:'#0050f0',re:/ทีทีบี|\bttb\b|\btmb|ทหารไทย|ธนชาต|thanachart/i},
+ {id:'gsb',name:'ออมสิน',full:'ธนาคารออมสิน',color:'#eb198d',re:/ออมสิน|\bgsb\b|mymo/i},
+ {id:'baac',name:'ธ.ก.ส.',full:'ธ.ก.ส.',color:'#4b9b3c',re:/ธ\.\s*ก\.\s*ส|\bbaac\b|เพื่อการเกษตร/i},
+ {id:'ghb',name:'ธอส.',full:'ธนาคารอาคารสงเคราะห์',color:'#f57d20',re:/อาคารสงเคราะห์|ธ\.?\s*อ\.?\s*ส\.|\bghb\b/i},
+ {id:'kkp',name:'เกียรตินาคินภัทร',full:'ธนาคารเกียรตินาคินภัทร',color:'#635b9c',re:/เกียรตินาคิน|kiatnakin|\bkkp\b/i},
+ {id:'uob',name:'ยูโอบี',full:'ธนาคารยูโอบี',color:'#0b3b8c',re:/ยูโอบี|\buob\b|\btmrw\b/i},
+ {id:'cimb',name:'ซีไอเอ็มบี',full:'ธนาคารซีไอเอ็มบี ไทย',color:'#7e2f36',re:/ซีไอเอ็มบี|\bcimb\b/i},
+ {id:'lhb',name:'แลนด์ แอนด์ เฮ้าส์',full:'ธนาคารแลนด์ แอนด์ เฮ้าส์',color:'#6d6e71',re:/แลนด์\s*แอนด์\s*เฮ้าส์|lh\s*bank/i},
+ {id:'tmn',name:'TrueMoney',full:'TrueMoney Wallet',color:'#ff8300',re:/true\s*money|ทรูมันนี่|ทรู\s*มันนี่/i}
+];
+var RX_PAY=/ชำระเงินสำเร็จ|ชำระบิล|จ่ายบิล|bill\s*payment|payment\s*success|เติมเงิน|top\s*-?\s*up|สแกนจ่าย|จ่ายเงินสำเร็จ|qr\s*payment/i;
+var RX_SLIP=/โอนเงิน|โอนสำเร็จ|ทำรายการสำเร็จ|รายการสำเร็จ|transfer|พร้อมเพย์|promptpay|prompt\s*pay|เลขที่รายการ|รหัสอ้างอิง|เลขที่อ้างอิง|transaction\s*(?:id|ref|no)/i;
+var KW_TOP=/(ยอดสุทธิ|ยอดรวมสุทธิ|รวมทั้งสิ้น|ชำระทั้งสิ้น|ยอดชำระ|ยอดที่ต้องชำระ|grand\s*total|net\s*total|total\s*due|amount\s*due|net\s*amount|total\s*amount)/i;
+var KW_AMT=/(จำนวนเงิน|จำนวน|ยอดโอน|ยอดเงินโอน|ยอดเงิน|ยอดรวม|รวมเงิน|amount|total|รวม)/i;
+var KW_BAD=/(ค่าธรรมเนียม|ค่าบริการ|\bfee|คงเหลือ|balance|available|ใช้ได้|เงินทอน|ทอน|change|เงินสด|\bcash\b|รับเงินมา|received|tendered|ภาษี|vat|ส่วนลด|discount|sub\s*-?\s*total|ก่อนภาษี|แต้ม|point|จำนวนชิ้น|\bqty\b)/i;
+var KW_ID=/(เลขที่|รหัส|อ้างอิง|\bref\b|reference|บัญชี|account|\ba\/c\b|\bacc\b|โทร|\btel\b|phone|tax\s*id|เลขประจำตัว|\bpos\b|biller|comp\s*code|invoice\s*no)/i;
+var RX_WHO=/^(?:ไปยัง|ไปที่|ถึง|ผู้รับเงิน|ชื่อผู้รับ|ผู้รับ|โอนให้|to|payee|receiver|recipient)\s*[:：]?\s*(.*)$/i;
 function parseReceipt(raw){
-  var t=String(raw).replace(/[๐-๙]/g,function(c){return String(c.charCodeAt(0)-0x0E50)});
+  var t=String(raw).replace(/[๐-๙]/g,function(c){return String(c.charCodeAt(0)-0x0E50)})
+    .replace(/ํา/g,'ำ').replace(/(?:THB|Baht)(?=\s*\d)/gi,'฿ ');
   var lines=t.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean);
-  function clean(s){return s.replace(/\d{1,2}\s*[\/\-.]\s*\d{1,2}\s*[\/\-.]\s*\d{2,4}/g,' ').replace(/\d{1,2}:\d{2}(:\d{2})?/g,' ')}
+  function clean(s){
+    return s.replace(/\d{1,2}\s*[\/\-.]\s*\d{1,2}\s*[\/\-.]\s*\d{2,4}/g,' ')
+      .replace(RX_TDATE,' ')
+      .replace(/\d{1,2}\s*[:.]\s*\d{2}(?:\s*[:.]\s*\d{2})?\s*(?:น\.|นาฬิกา|am\b|pm\b)/gi,' ')
+      .replace(/\d{1,2}:\d{2}(:\d{2})?/g,' ')
+      .replace(/[\dxX*•]+(?:\s*-\s*[\dxX*•]+){2,}/g,' ')
+      .replace(/[xX*•]{2,}[\dxX*•\-]*/g,' ')
+      .replace(/[a-zA-Z]+\d[\da-zA-Z]*/g,' ');
+  }
   function nums(s){
     var o=[],m,re=/(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?(?![\d,])/g;s=clean(s);
     while((m=re.exec(s))){var v=parseFloat(m[1].replace(/,/g,'')+(m[2]||''));if(v>0&&v<1e7)o.push({v:v,dec:!!m[2]})}
     return o;
   }
+  function curNums(s){
+    var o=[],m,re=/฿\s*(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?(?![\d,])|(\d{1,3}(?:,\d{3})+|\d+)(\.\d{1,2})?\s*(?:บาท|baht|thb)/gi;s=clean(s);
+    while((m=re.exec(s))){var a=m[1]||m[3],dd=m[2]||m[4]||'';var v=parseFloat(a.replace(/,/g,'')+dd);if(v>0&&v<1e7)o.push({v:v,dec:!!dd})}
+    return o;
+  }
   function pick(a){var d=a.filter(function(x){return x.dec});return (d.length?d:a).reduce(function(m,x){return x.v>m?x.v:m},0)}
-  var KW=/(จำนวน|จํานวน|ยอดเงิน|ยอดรวม|ยอดชำระ|ยอดชําระ|ยอดสุทธิ|รวมทั้งสิ้น|รวมเงิน|สุทธิ|total|amount)/i;
-  var kc=[];
-  lines.forEach(function(l,i){if(!KW.test(l))return;var n=nums(l);if(!n.length&&lines[i+1])n=nums(lines[i+1]);kc=kc.concat(n)});
+  function badLine(l){return !!l&&(KW_BAD.test(l)&&!KW_TOP.test(l))}
+  function idLine(l){return !!l&&KW_ID.test(l)&&!KW_TOP.test(l)&&!KW_AMT.test(l)}
+  var top=[],kw=[],cur=[],gen=[];
+  lines.forEach(function(l,i){
+    if(badLine(l)||idLine(l))return;
+    var isTop=KW_TOP.test(l),n=nums(l);
+    cur=cur.concat(curNums(l));
+    gen=gen.concat(n.filter(function(x){return x.dec}));
+    if(isTop||KW_AMT.test(l)){
+      var nx=lines[i+1];
+      if(!n.length&&nx&&!badLine(nx)&&!idLine(nx))n=nums(nx);
+      if(isTop)top=top.concat(n);else kw=kw.concat(n);
+    }
+  });
   var allDec=nums(t).filter(function(x){return x.dec});
-  var amount=pick(kc)||pick(allDec);
+  var amount=pick(top)||pick(kw)||pick(cur)||pick(gen)||pick(allDec);
   // candidate amounts for the user to pick from
-  function desc(a){return a.slice().sort(function(x,y){return y.v-x.v})}
-  var kcd=kc.filter(function(x){return x.dec});
-  var pool=desc(kcd.length?kcd:kc).concat(desc(allDec)),seen={},cands=[];
+  function desc(a){return a.slice().sort(function(x,y){return (y.dec-x.dec)||(y.v-x.v)})}
+  var pool=desc(top).concat(desc(kw),desc(cur),desc(gen),desc(allDec)),seen={},cands=[];
   if(amount>0){cands.push(Math.round(amount*100)/100);seen[cands[0]]=1}
   pool.forEach(function(x){var v=Math.round(x.v*100)/100;if(v>0&&!seen[v]&&cands.length<6){seen[v]=1;cands.push(v)}});
   var date=null,m=/(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*[\/\-.]\s*(\d{2,4})(?!\d)/.exec(t);
   if(m)date=mkDate(+m[3],+m[2],+m[1]);
   for(var i=0;i<12&&!date;i++)for(var j=0;j<MONTHS[i].length&&!date;j++){
-    var a=MONTHS[i][j],p=/^[a-z]/.test(a)?a+'[a-z]*\\.?':a.replace(/\./g,'\\.?\\s*');
-    var r=new RegExp('(\\d{1,2})\\s*'+p+'\\s*(\\d{2,4})','i').exec(t);
+    var r=new RegExp('(\\d{1,2})\\s*'+monPat(MONTHS[i][j])+'\\s*(\\d{2,4})','i').exec(t);
     if(r)date=mkDate(+r[2],i+1,+r[1]);
   }
-  return {amount:Math.round((amount||0)*100)/100,date:date,cands:cands,slip:/โอนเงิน|โอนสำเร็จ|transfer|พร้อมเพย์|promptpay|prompt\s*pay|เลขที่รายการ/i.test(t)};
+  // slip type and issuing bank (earliest mention = sender / app bank)
+  var bank=null,bi=1e9;
+  BANKS.forEach(function(b){var mm=b.re.exec(t);if(mm&&mm.index<bi){bi=mm.index;bank=b}});
+  var kind=RX_PAY.test(t)?'pay':(RX_SLIP.test(t)||(bank&&/สำเร็จ|success/i.test(t)))?'slip':'receipt';
+  if(kind==='receipt')bank=null;
+  // recipient name (labelled lines such as "ไปยัง", "ผู้รับ", "To")
+  var who='';
+  for(var k=0;k<lines.length&&!who;k++){
+    var w=RX_WHO.exec(lines[k]);if(!w)continue;
+    var nm=(w[1]&&/[ก-๙A-Za-z]{2,}/.test(w[1])?w[1]:(lines[k+1]||''));
+    nm=nm.replace(/[\d*•]+|\b[xX]{2,}\b|[-:：]/g,' ').replace(/\s+/g,' ').trim();
+    if(nm.length>=2&&nm.length<=40&&/[ก-๙A-Za-z]{2,}/.test(nm)&&!BANKS.some(function(b){return b.re.test(nm)})&&!KW_ID.test(nm)&&!KW_AMT.test(nm))who=nm;
+  }
+  var nt='';
+  if(kind==='slip')nt='โอนเงิน'+(who?'ให้ '+who:'')+(bank?' ('+bank.name+')':' (สลิปธนาคาร)');
+  else if(kind==='pay')nt='ชำระเงิน'+(who?' '+who:'')+(bank?' ('+bank.name+')':' (สลิป)');
+  return {amount:Math.round((amount||0)*100)/100,date:date,cands:cands,slip:kind!=='receipt',kind:kind,bank:bank,note:nt.slice(0,80)};
 }
 
 /* data */
@@ -1247,6 +1319,7 @@ route();
 if(!lsGet(SEEN))setTimeout(showWelcome,300);
 })();
 </script>
+
 
 
 
